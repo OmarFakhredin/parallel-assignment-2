@@ -6,7 +6,7 @@
 #define ROWS 750
 #define COLS 600
 #define INNER_DIM 650
-#define NUM_THREADS 4
+#define NUM_THREADS 1
 
 struct ThreadArgs {
     int start_row;
@@ -15,6 +15,7 @@ struct ThreadArgs {
     int (*matB)[INNER_DIM];
     int (*matC)[INNER_DIM];
 };
+
 void* multiply_matrices(void* arg) {
     struct ThreadArgs* args = (struct ThreadArgs*) arg;
     for(int i = args->start_row; i < args->end_row; i++) {
@@ -26,7 +27,6 @@ void* multiply_matrices(void* arg) {
             args->matC[i][j] = sum;
         }
     }
-
     pthread_exit(NULL);
 }
 
@@ -45,7 +45,8 @@ int main() {
             matB[i][j] = rand() % 10;
         }
     }
-    double start_time = omp_get_wtime();
+
+    clock_t start_time = clock();
     pthread_t threads[NUM_THREADS];
     struct ThreadArgs args[NUM_THREADS];
     for(int i = 0; i < NUM_THREADS; i++) {
@@ -59,8 +60,10 @@ int main() {
     for(int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
-    double end_time = omp_get_wtime();
+    clock_t end_time = clock();
+
     printf("Matrix multiplication done successfully.\n");
-    printf("Execution time: %f seconds.\n", end_time - start_time);
+    printf("Execution time over %d threads: %f seconds.\n",NUM_THREADS, (double)(end_time - start_time) / CLOCKS_PER_SEC);
+
     return 0;
 }
